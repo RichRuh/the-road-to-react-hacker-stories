@@ -53,11 +53,10 @@ const App = () => {
   ); //This sets up stories as the state, and dispatchStories as the function that takes an object (action, payload)
 
 
-  React.useEffect(()=> {
-    // if searchterm is not present, do nothing
+  const handleFetchStories = React.useCallback(()=> {
     if (!searchTerm) return;
 
-    dispatchStories({ type: 'STORIES_FETCH_INIT'}); 
+    dispatchStories({type: 'STORIES_FETCH_INIT'});
 
     fetch(`${API_ENDPOINT}${searchTerm}`)
       .then((response) => response.json())
@@ -66,12 +65,17 @@ const App = () => {
           type: 'STORIES_FETCH_SUCCESS',
           payload: result.hits,
         });
-    })
-      .catch(()=> 
-        dispatchStories({ type: 'STORIES_FETCH_FAILURE'})
-    );
+      })
+      .catch(() =>
+      {
+        dispatchStories({type: 'STORIES_FETCH_FAILURE'})
+      });
   }, [searchTerm]);
 
+
+  React.useEffect(()=> {
+    handleFetchStories();
+  }, [handleFetchStories]);
   
 
   const handleRemoveStory = (item) => {
