@@ -57,10 +57,12 @@ const App = () => {
   ); //This sets up stories as the state, and dispatchStories as the function that takes an object (action, payload)
 
 
+
   const handleFetchStories = React.useCallback(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT'}); 
 
     fetch(url)
+
       .then((response) => response.json())
       .then((result) => {
         dispatchStories({
@@ -89,9 +91,9 @@ const App = () => {
     setSearchTerm(event.target.value);
   }
 
-  const searchedStories = stories.data.filter(function (story) {
-     return story.title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // const searchedStories = stories.data.filter(function (story) {
+  //    return story.title.toLowerCase().includes(searchTerm.toLowerCase());
+  // });
 
 
 
@@ -128,7 +130,7 @@ const App = () => {
         <p>Loading ...</p>
       ) : (
         <List
-          list={searchedStories}
+          list={stories.data}
           onRemoveItem={handleRemoveStory}
         />
       )}
