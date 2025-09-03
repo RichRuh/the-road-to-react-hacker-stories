@@ -31,15 +31,15 @@ const storiesReducer = (state, action) => {
     }
   };
 
-  const useStorageState = (key, initialState) => {
-    const [value, setValue] = React.useState(
-      localStorage.getItem(key) || initialState
-    ); 
-    React.useEffect(()=> {
-      localStorage.setItem(key, value);
-    }, [value, key]);  //if the values in this list (value,key) are changed, this effect will be triggered
-    return [value, setValue];  //This is returning the value of the storage state, and a setter function
-  };
+const useStorageState = (key, initialState) => {
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  ); 
+  React.useEffect(()=> {
+    localStorage.setItem(key, value);
+  }, [value, key]);  //if the values in this list (value,key) are changed, this effect will be triggered
+  return [value, setValue];  //This is returning the value of the storage state, and a setter function
+};
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -47,16 +47,20 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useStorageState('search', 'React');
 
+  const [url, setUrl] = React.useState(
+    `${API_ENDPOINT}${searchTerm}`
+  );
+
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer, 
     { data:[], isLoading: false, isError: false} //initializes states
   ); //This sets up stories as the state, and dispatchStories as the function that takes an object (action, payload)
 
 
-  React.useEffect(()=> {
+  const handleFetchStories = React.useCallback(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT'}); 
 
-    fetch(`${API_ENDPOINT}react`)
+    fetch(url)
       .then((response) => response.json())
       .then((result) => {
         dispatchStories({
@@ -67,9 +71,12 @@ const App = () => {
       .catch(()=> 
         dispatchStories({ type: 'STORIES_FETCH_FAILURE'})
     );
-  });
+  }, [url]);
 
-  
+
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleRemoveStory = (item) => {
     dispatchStories({
@@ -78,13 +85,19 @@ const App = () => {
     });
   };
 
-  const handleSearch = (event) => {
+  const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
   }
 
   const searchedStories = stories.data.filter(function (story) {
      return story.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+
+
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`)
+  };
 
   return (
     <div>
@@ -94,12 +107,20 @@ const App = () => {
         id="search"
         value={searchTerm}
         isFocused
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
 
       <hr />
+
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
+        Submit
+      </button>
 
       {stories.isError && <p>Something went wrong ...</p>}
 
